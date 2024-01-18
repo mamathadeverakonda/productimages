@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel = "stylesheet" type = "text/css" href = "index.css"></link>
+    <title>Product Catalog</title>
+</head>
+<body>
+    <h1 class = "title">SELECT YOUR CHOICE</h1>
+    <div class = "tab-container">
+        <div class = "button-container">
+                <button class = "button" onclick="showProducts('men')">Men</button>
+                <button class = "button" onclick="showProducts('women')">Women</button>
+                <button class = "button" onclick="showProducts('kids')">Kids</button>
+            </div>
+            
+            <div id="productContainer" class="product-container">
+                <!-- Product cards will be dynamically inserted here -->
+            </div>
+            
+            <script>
+                 document.addEventListener('DOMContentLoaded', function () {
+                showProducts('Women'); 
+            });
+
+            function showProducts(category) {
+                // Fetch data from API based on the category
+                const apiUrl = 'https://cdn.shopify.com/s/files/1/0564/3685/0790/files/multiProduct.json';
+
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Check if the categories array exists in the data
+                        if (data.categories && Array.isArray(data.categories)) {
+                            // Find the category with the given name (case-insensitive)
+                            const selectedCategory = data.categories.find(cat => cat.category_name.toLowerCase() === category.toLowerCase());
+
+                            if (selectedCategory) {
+                                renderProducts(selectedCategory.category_products);
+                            } else {
+                                console.error(`Category "${category}" not found in the data.`);
+                            }
+                        } else {
+                            console.error('Invalid data format. Missing or invalid "categories" array.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
+            }
+
+            function renderProducts(products) {
+                // Clear the existing product cards
+                const container = document.getElementById('productContainer');
+                container.innerHTML = '';
+
+                // Iterate through the products and create product cards
+                products.forEach(product => {
+                    const card = document.createElement('div');
+                    card.classList.add('product-card');
+
+                    // Calculate discount percentage
+                    const discountPercentage = calculateDiscount(product.price, product.compare_at_price);
+
+                    // Set product information dynamically
+                    card.innerHTML = `
+                    <div class = "product-details">
+                        <img src="${product.image}" alt="${product.title}" class="product-image">
+                        <span class="badge">${product.badge_text || ''}</span>
+                        <div class = "card-container">
+                        <h3 class="product-title">${product.title}</h3>
+                        <p class="vendor"><span class = "dot">.</span> ${product.vendor}</p>
+                        </div>
+                        <div class = "small-container">
+                        <p class="price">Rs.${product.price}.00</p>
+                        <p class="compare-price">Rs.${product.compare_at_price}.00</p>
+                        <p class="discount">${discountPercentage}% off</p>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                        </div>
+                    `;
+
+                    // Append the product card to the container
+                    container.appendChild(card);
+                });
+            }
+
+            function calculateDiscount(price, compareAtPrice) {
+                // Calculate the discount percentage
+                const discount = ((compareAtPrice - price) / compareAtPrice) * 100;
+                return discount.toFixed(2);
+            }
+        </script>
+        </div>
+
+    </div>
+</body>
+</html>
